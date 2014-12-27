@@ -6,7 +6,7 @@ Google Map Javascript API version 3, written in Object Orientated Programming fo
 ## Example
 Include the Google map api asynchronously..
 ```HTML
-<script src="https://maps.googleapis.com/maps/api/js?key=APIKey&amp;region=JAM&amp;callback=mapInitializer&amp;signed_in=true&amp;libraries=places" type="text/javascript"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=APIKey&region=JAM&callback=mapInitializer&signed_in=true&libraries=places" type="text/javascript"></script>
 ```
 
 ```Javascript
