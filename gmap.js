@@ -15,12 +15,19 @@ function GMaps(map_canvas, main_cords){
     * @property {boolean} showPlacesNearby                  - Set to true if places nearby should be shown near
     *   the default or centered location.
     * @property {object} location                           - The default location of the map. This is also used by
-    *   the queries.  
+    *   the queries.
+    * @property {boolean} placeCenter                       - Set to true, if the current contexted place is to be set as a the
+    *   center of the map.
+    * @property {boolean} clearMapOnQuery                   - Clear the map any time a new search is made. This is done to
+    *   facilitate new map data vs old map data.
+    * @property {int} limitResults                          - Set the amount of search results to be shown on the map.
     */
     this.settings = {
         showPlacesNearby: false,
         location: {lat: 18.0030, lng: -76.7446},
-        limitResults: 10
+        limitResults: 10,
+        placeCenter: false,
+        clearMapOnSearch: true
     }
     /**
     * @property {int} zoom                                  - Zoom Level of the map, which ranges from 1-22.
@@ -29,15 +36,14 @@ function GMaps(map_canvas, main_cords){
     *   This can be invoke through the map.setCenter function. 
     */
     this.mapOptions = {
-        zoom: 12,
-        center:  this.settings.location,
+        zoom: 12
     };
     /**
     * @property {object} queryBy                            - Type of queries that can be done.
     * @property {object} queryBy.map                        - The map to be queried.
     * @property {object} queryBy.nearbyPlaces               - Query places by nearby palces.
     * @property {object} queryBy.nearbyPlaces.location      - Location of object.
-    * @property {int} queryBy.nearbyPlaces.radius           - Radius of the location to be query.
+    * @property {int} queryBy.nearbyPlaces.radius           - Radius (in meters) of the location to be query.
     * @property {string[]} queryBy.nearbyPlaces.types       - List of types of places to be return in the query result.
     * @property {object} queryBy.text                       - Query places by string.
     * @property {string} queryBy.text.query                 - Query text to search for places.
@@ -50,6 +56,7 @@ function GMaps(map_canvas, main_cords){
     */
     this.queryBy = {
         map: this,
+        center: true,
         updateLocation: function(location){
             this.nearbyPlaces.location = location;
         },
@@ -64,7 +71,7 @@ function GMaps(map_canvas, main_cords){
             types: [],
         }
     };
-    if(main_cords){
+    if(main_cords != undefined){
         this.mapOptions.center = main_cords;
         this.queryBy.updateLocation(main_cords);
     }
@@ -99,8 +106,8 @@ function GMaps(map_canvas, main_cords){
         this.markers[place.placeId] = marker;
         if(this.settings.showPlacesNearby){
             this.nearbyPlacesSearch(place);
-            this.map.setCenter(place.location);
         }
+        this.setCenter(place);
         return marker;
     };
     /**
@@ -135,6 +142,8 @@ function GMaps(map_canvas, main_cords){
             callback = this.mapQueryResult;
         options = this.queryBy.text;
         options.query = searchText;
+        if(this.settings.clearMapOnSearch)
+            this.clearMap();
         service.textSearch(options, callback);
     }
     /**
@@ -169,7 +178,6 @@ function GMaps(map_canvas, main_cords){
             }
             gmap.createMarker(content, placeGeo);
             gmap.map.setZoom(18);
-            gmap.map.setCenter(place.location);
             if(gmap.settings.showPlacesNearby){
                 gmap.nearbyPlacesSearch(place);
                 gmap.map.setCenter(place.location);
@@ -184,7 +192,6 @@ function GMaps(map_canvas, main_cords){
           position: location,
           map: this.map
       });
-      this.map.setCenter(location);
     };
     /**
     * Add Marker when the map is clicked.
@@ -204,16 +211,42 @@ function GMaps(map_canvas, main_cords){
         }
         this.markers = [];
     }
+    /**
+    * Set the given place as the center of the map.
+    * In addition, it ensure no other place can be set as the center without the interaction.
+    * @param {object} place                                 - Place object.
+    */
+    this.setCenter = function(place){
+        if(this.settings.placeCenter){
+            this.map.setCenter(place.location);
+            this.mapOptions = place.location;
+            this.settings.placeCenter = false;
+        }
+    }
 }
 
+/**
+* Create an Google Map InfoWindow.
+* @return google.maps.InfoWindow
+*/
 GMaps.createInfoWindow = function(content){
     return new google.maps.InfoWindow({
         content: content
     });
 };
+
+/**
+* Create a cordinate object.
+* @return google.maps.LatLng|object.
+*/
 GMaps.createCords = function(lat, long){
     return (GMaps.isAvailable)? new google.maps.LatLng(lat, long) : {lat: lat, lng: long};
 };
+
+/**
+* Create place by placeId and location.
+* @return object.
+*/
 GMaps.createPlaceByLocation = function(placeId, location){
     return {
         // Location/place id.
@@ -223,10 +256,30 @@ GMaps.createPlaceByLocation = function(placeId, location){
         // query: 'stanley park vancouver bc canada'                
     }
 };
+
+/**
+* Create a boundary on map.
+* @param {object} southWestCords                             - South west cordinates of the boundary.
+* @param {object} northEastCords                             - North east cordinates of the boundary.
+* @return google.maps.LatLngBounds.
+*/
+GMaps.createBoundary = function(southWestCords, northEastCords){
+    return google.maps.LatLngBounds(southWestCords, northEastCords);
+}
+
+/**
+* Extract the cordinates from a place geometry.
+* @return google.maps.LatLng|object
+*/
 GMaps.geometryToCords = function(place){
     var cords = place.geometry.location;
     return GMaps.createCords(cords.k, cords.D);
 }
+
+/**
+* Generate a HTML layout for the query result.
+* @return DOMHTMLDocument.
+*/
 GMaps.formatQueryResult = function(place){
     var img = document.createElement("img");
     img.src = place.icon;
