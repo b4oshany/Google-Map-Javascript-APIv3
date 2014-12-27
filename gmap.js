@@ -284,14 +284,16 @@ GMaps.formatQueryResult = function(place){
     var img = document.createElement("img");
     img.src = place.icon;
     var name = document.createElement("h3");
-    name.innerHTML = place.name;
     var article = document.createElement("article");
     article.setAttribute("place_id", place.place_id);
     article.setAttribute("reference", place.reference);
     article.setAttribute("scope", place.scope);
     var tags = document.createElement("p");
     tags.innerHTML = place.types.toString();
-    article.appendChild(img, name, tags);
+    name.appendChild(img);
+    name.innerHTML += place.name;
+    article.appendChild(name);
+    article.appendChild(tags);
     return article;
 } 
 GMaps.activeMap = null;
