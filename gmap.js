@@ -1,12 +1,33 @@
 /**
+* Check if a varibale is empty.
+* @param {mixed} $var.
+* @return boolean True if the variable is empty, else false.
+*/
+function empty($var){
+    try{
+        return myVar==null || myVar==undefined || myVar=='';
+    }catch($e){
+        return true;
+    }
+}
+
+/**
 * Initialize google map.
 * @function initialize
 * 
 */
 function GMaps(map_canvas, main_cords){
+    /*
+    * @property {google.maps.Map} map                       - Goolge Map Object.
+    * @property {string} branchUrl                          - Website of the host.
+    * @proeprty {string} brand                              - Name of the host.
+    * @property {obejct} markers                            - Map markers.
+    * @property {google.maps.PlaceService} placeService     - Goolge Place service library object.
+    * @property {string} map_canvas                         - HMLElement ID of the map canvas.
+    */
     this.map = null;
-    this.brandUrl = 'https://developers.google.com/maps/';
-    this.brand = 'Google Maps JavaScript API';
+    this.brandUrl = 'http://osoobe.com';
+    this.brand = 'Js Google Map API';
     this.markers = {};
     this.placeService = null;
     this.map_canvas = map_canvas;
@@ -36,7 +57,8 @@ function GMaps(map_canvas, main_cords){
     *   This can be invoke through the map.setCenter function. 
     */
     this.mapOptions = {
-        zoom: 12
+        zoom: 12,
+        center: GMaps.defaultCenter
     };
     /**
     * @property {object} queryBy                            - Type of queries that can be done.
@@ -71,6 +93,9 @@ function GMaps(map_canvas, main_cords){
             types: [],
         }
     };
+    /**
+    * Center the map to the cordinates that was given via the constructor.
+    */
     if(main_cords != undefined){
         this.mapOptions.center = main_cords;
         this.queryBy.updateLocation(main_cords);
@@ -88,26 +113,40 @@ function GMaps(map_canvas, main_cords){
     * Create a marker and add it to the map.
     * @return google.maps.Marker
     */
-    this.createMarker = function(content, place, options){
+    this.createMarker = function(content, place, options, fn){
         GMaps.activeMap = this;
-        var map = this.map
-        var marker = new google.maps.Marker({
+        var map = this.map;
+        var markerOptions = {
             map: map,
-            place: place,
+            animation: google.maps.Animation.DROP,
             attribution: {
                 source: this.brand,
                 webUrl: this.brandUrl
             }            
-        });
+        };
+        if(place.hasOwnProperty('placeId')){
+            markerOptions.place = place;
+        }else{
+            markerOptions.position = GMaps.toGoogleLatLng(place);
+        }
+        if(options != undefined){
+            for(x in options){
+                markerOptions[x] = options[x];
+            }
+        }
+        var marker = new google.maps.Marker(markerOptions);
         var infoWindow = GMaps.createInfoWindow(content);
         marker.addListener('click', function(){
-            infoWindow.open(map, this);
+            infoWindow.open(map, marker);
         });
         this.markers[place.placeId] = marker;
         if(this.settings.showPlacesNearby){
             this.nearbyPlacesSearch(place);
         }
         this.setCenter(place);
+        if(fn != undefined){
+            fn(marker);
+        }
         return marker;
     };
     /**
@@ -136,7 +175,7 @@ function GMaps(map_canvas, main_cords){
     *   the query result. By default it uses GMaps.mapQueryResult function.
     * @param {object} options                           - Additional query options.
     */
-    this.textSearch = function(searchText, callback, options){
+    this.textSearch = function(searchText, callback){
         var service = this.initiateSearchService();
         if(callback == undefined)
             callback = this.mapQueryResult;
@@ -149,12 +188,18 @@ function GMaps(map_canvas, main_cords){
     /**
     * Add the query result to the map.
     */
-    this.mapQueryResult = function(results, status){
+    this.mapQueryResult = function(results, status, formatFn){
         if (status == google.maps.places.PlacesServiceStatus.OK) {
             for (var i = 0; i < results.length && i < GMaps.activeMap.settings.limitResults; i++) {
                 var place = results[i];
-                GMaps.activeMap.createMarker(GMaps.formatQueryResult(place),
-                    GMaps.createPlaceByLocation(place.place_id, place.geometry.location));
+                if(typeof formatFn == "function"){
+                    formatFn(place, i);
+                }else{
+                    GMaps.activeMap.createMarker(
+                        GMaps.formatQueryResult(place),
+                        GMaps.createPlaceByLocation(place.place_id, place.geometry.location)
+                    );
+                }
             }
         }
     };
@@ -218,10 +263,18 @@ function GMaps(map_canvas, main_cords){
     */
     this.setCenter = function(place){
         if(this.settings.placeCenter){
-            this.map.setCenter(place.location);
-            this.mapOptions = place.location;
+            var location = GMaps.toGoogleLatLng(place);
+            this.map.setCenter(location);
+            this.mapOptions.location = location;
             this.settings.placeCenter = false;
         }
+    }
+    /**
+    * Get marker by index.
+    * @return google.maps.Marker.
+    */
+    this.getMarkerByIndex = function(index){
+        return this.markers[Object.keys(this.markers)[index]];
     }
 }
 
@@ -234,6 +287,13 @@ GMaps.createInfoWindow = function(content){
         content: content
     });
 };
+
+/**
+* Add event handlers to a marker.
+*/
+GMaps.addListener = function(target, event, fn){
+    google.maps.event.addListener(target, event, fn);
+}
 
 /**
 * Create a cordinate object.
@@ -277,6 +337,19 @@ GMaps.geometryToCords = function(place){
 }
 
 /**
+* Convert a object literal for a location to google.maps.LatLng object
+* @param {object} location Location cordinates or place.
+* @return google.maps.LatLng.
+*/
+GMaps.toGoogleLatLng = function(location){
+    if(location.hasOwnProperty("lat"))
+        return new google.maps.LatLng(location.lat, location.lng);
+    else if(location.hasOwnProperty("placeId"))
+        return location.location;
+    return location;
+}
+
+/**
 * Generate a HTML layout for the query result.
 * @return DOMHTMLDocument.
 */
@@ -296,8 +369,12 @@ GMaps.formatQueryResult = function(place){
     article.appendChild(tags);
     return article;
 } 
+// No active map is available.
 GMaps.activeMap = null;
+// Map api library is not available.
 GMaps.isAvaliable = false;
+// Center the map to Kingston, Jamaica.
+GMaps.defaultCenter = {lat: 18.0030, lng: -76.7446};
 
 
 /**
