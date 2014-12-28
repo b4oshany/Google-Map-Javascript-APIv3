@@ -3,21 +3,22 @@ Google-Map-Javascript-APIv3
 
 Google Map Javascript API version 3, written in Object Orientated Programming for better control over Google Map.
 
-## Example
-Include the Google map api asynchronously..
+## Getting Started
 ```HTML
 <div id="map-canvas"></div>
 <script src="https://maps.googleapis.com/maps/api/js?key=APIKey&region=JAM&callback=mapInitializer&signed_in=true&libraries=places" type="text/javascript"></script>
+<script="gmap.js"></script>
 ```
 
 ```Javascript
 function mapInitializer(){
 
-    // Create GMaps object passing the map canvas id. 
+    // Create GMaps object and pass in the map canvas id as an argument. 
     var gmap = new GMaps('map-canvas');
     // Initiate the loading of google map data.
     gmap.initialize();
-    // Set showPlacesNearby to false, to ensure no nearby places are shown (by default they are shown since showPlacesNearby is set to true).
+    // Set showPlacesNearby to false, to ensure no nearby places are
+    // shown (by default they are shown since showPlacesNearby is set to true).
     gmap.settings.showPlacesNearby = false;
     // The cordinates of a restaurant in Sydney, US.
     var pyr = GMaps.createCords(-33.8665433,151.1956316);
