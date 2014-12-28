@@ -3,6 +3,9 @@ Google-Map-Javascript-APIv3
 
 Google Map Javascript API version 3, written in Object Orientated Programming for better control over Google Map.
 
+## Demo
+(http://b4oshany.github.io/Google-Map-Javascript-APIv3/)
+
 ## Getting Started
 ```HTML
 <div id="map-canvas"></div>
