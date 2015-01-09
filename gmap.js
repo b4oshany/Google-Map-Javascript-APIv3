@@ -1,17 +1,4 @@
 /**
-* Check if a varibale is empty.
-* @param {mixed} $var.
-* @return boolean True if the variable is empty, else false.
-*/
-function empty($var){
-    try{
-        return myVar==null || myVar==undefined || myVar=='';
-    }catch($e){
-        return true;
-    }
-}
-
-/**
 * Initialize google map.
 * @function initialize
 * 
@@ -46,7 +33,7 @@ function GMaps(map_canvas, main_cords){
     this.settings = {
         showPlacesNearby: false,
         location: {lat: 18.0030, lng: -76.7446},
-        limitResults: 10,
+        limitResults: 20,
         placeCenter: false,
         clearMapOnSearch: true
     }
@@ -107,6 +94,7 @@ function GMaps(map_canvas, main_cords){
         GMaps.activeMap = this;
         this.map = new google.maps.Map(document.getElementById(this.map_canvas),
             this.mapOptions);
+        this.queryBy.text.bounds = this.map.getBounds();
         GMaps.isAvailable = true;
     };
     /**
