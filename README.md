@@ -9,17 +9,27 @@ Google Map Javascript API version 3, written in Object Orientated Programming fo
 ## Getting Started
 ```HTML
 <div id="map-canvas"></div>
-<script src="https://maps.googleapis.com/maps/api/js?key=APIKey&region=JAM&callback=mapInitializer&signed_in=true&libraries=places" type="text/javascript"></script>
 <script="gmap.js"></script>
 ```
 
 ```Javascript
+
+// Import Google Map src library from Google's API library with the given params.
+GMaps.initialize({
+    "key": APIKey,
+    "region": "JAM",
+    "callback": "functionToTriggerOnLoad",
+    "signed_in": true,
+    "libraries": "places"
+});
+
+
 function mapInitializer(){
 
     // Create GMaps object and pass in the map canvas id as an argument. 
     var gmap = new GMaps('map-canvas');
     // Initiate the loading of google map data.
-    gmap.initialize();
+    gmap.render();
     // Set showPlacesNearby to false, to ensure no nearby places are
     // shown (by default they are shown since showPlacesNearby is set to true).
     gmap.settings.showPlacesNearby = false;
@@ -46,8 +56,6 @@ In addition you can request a place information by doing the following:
 Another way of getting a place is to search by text as seen below.
 
 ```Javascript
-    // Center the first result of the query on the map.
-    gmap.settings.placeCenter = true
     // Search for a place in Jamaica called 'Kingston'.
     gmap.textSearch("Kingston");
 ```

@@ -90,7 +90,7 @@ function GMaps(map_canvas, main_cords){
     /**
     * Initiate google maps.
     */
-    this.initialize = function() {
+    this.render = function() {
         GMaps.activeMap = this;
         this.map = new google.maps.Map(document.getElementById(this.map_canvas),
             this.mapOptions);
@@ -156,14 +156,17 @@ function GMaps(map_canvas, main_cords){
         options.location = place.location;
         service.nearbySearch(options, callback)
     };
+    
     /**
     * Perform the text search.
     * @param {string} searchText                        - Text to query by.
+    * @param {boolean} placeCenter                      - Place the mark in the center of the map.
     * @callback {resultCallback} callback               - Callback function to render
     *   the query result. By default it uses GMaps.mapQueryResult function.
     * @param {object} options                           - Additional query options.
     */
-    this.textSearch = function(searchText, callback){
+    this.textSearch = function(searchText, placeCenter, callback){
+        this.settings.placeCenter = (typeof(placeCenter) == "boolean")? placeCenter : true;
         var service = this.initiateSearchService();
         if(callback == undefined)
             callback = this.mapQueryResult;
@@ -363,6 +366,22 @@ GMaps.activeMap = null;
 GMaps.isAvaliable = false;
 // Center the map to Kingston, Jamaica.
 GMaps.defaultCenter = {lat: 18.0030, lng: -76.7446};
+
+
+/**
+ * Import Google Map API library.
+ * @param {object}                  - Object to be converted to URL param for the src attribute for the script.
+ */
+GMaps.initialize = function(obj){
+    // Map querys.
+    var params = Object.keys(obj).reduce(function(a,k){a.push(k+'='+encodeURIComponent(obj[k]));return a},[]).join('&')
+    // Script a script and inject it into the page.
+    var url = 'https://maps.googleapis.com/maps/api/js?' + params;
+    var $script = document.createElement('script');
+    $script.type = 'text/javascript';
+    $script.src = url;
+    document.body.appendChild($script);
+}
 
 
 /**

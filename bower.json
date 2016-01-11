@@ -1,0 +1,29 @@
+{
+  "name": "Google-Map",
+  "version": "1.1",
+  "homepage": "https://github.com/b4oshany/Google-Map-Javascript-APIv3",
+  "authors": [
+    "Oshane Bailey <b4.oshany@gmail.com>"
+  ],
+  "description": "Google Map Javascript API version 3, written in Object Orientated Programming for better control over Google Map.",
+  "main": "gmaps.js",
+  "moduleType": [],
+  "keywords": [
+    "Goolge",
+    "Maps",
+    "Maps",
+    "Location",
+    "Place",
+    "Address",
+    "Lattitude",
+    "Longitude"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
