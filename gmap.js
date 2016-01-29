@@ -3,7 +3,7 @@
 * @function initialize
 * 
 */
-function GMaps(map_canvas, main_cords){
+function GMaps(map_canvas, main_cords) {
     /*
     * @property {google.maps.Map} map                       - Goolge Map Object.
     * @property {string} branchUrl                          - Website of the host.
@@ -29,6 +29,7 @@ function GMaps(map_canvas, main_cords){
     * @property {boolean} clearMapOnQuery                   - Clear the map any time a new search is made. This is done to
     *   facilitate new map data vs old map data.
     * @property {int} limitResults                          - Set the amount of search results to be shown on the map.
+    * @property {DirectionService}                          - Google DirectionService
     */
     this.settings = {
         showPlacesNearby: false,
@@ -37,6 +38,7 @@ function GMaps(map_canvas, main_cords){
         placeCenter: false,
         clearMapOnSearch: true
     }
+    
     /**
     * @property {int} zoom                                  - Zoom Level of the map, which ranges from 1-22.
     *   This can be invoke throw the map.setZooom method.
@@ -266,6 +268,59 @@ function GMaps(map_canvas, main_cords){
     */
     this.getMarkerByIndex = function(index){
         return this.markers[Object.keys(this.markers)[index]];
+    }
+    
+    
+    this.direction = {
+        gmap: this,
+        getDirectionsService: function(){
+            if(this._directionsService == undefined){
+                this._directionsService = new google.maps.DirectionsService();
+            }
+            return this._directionsService;
+        },
+        getDirectionsDisplay: function(){
+            if(this._directionsDisplay == undefined){
+                this._directionsDisplay = new google.maps.DirectionsRenderer();
+                this._directionsDisplay.setMap(this.gmap.map);
+            }
+            return this._directionsDisplay;
+        },
+        route: function(from, to, mode, callback){
+            var request = {
+                origin:from,
+                destination:to,
+                travelMode: google.maps.TravelMode.DRIVING
+            };
+            var obj = this;
+            obj.getDirectionsService().route(request, function(response, status){
+                console.log(response);
+                if(callback == undefined){
+                    if (status == google.maps.DirectionsStatus.OK) {
+                      obj.getDirectionsDisplay().setDirections(response);
+                    }
+                }else{
+                    callback(response, callback);
+                }
+            });
+        },
+        mode: {
+        }
+    }
+}
+
+GMaps.travelMode = {
+    driving: function(){
+        return new google.maps.TravelMode.DRIVING;
+    },
+    walking: function(){
+        return new google.maps.TravelMode.WALKING;
+    },
+    bicycling: function(){
+        return new google.maps.TravelMode.BICYCLING;
+    },
+    transit: function(){
+        return new google.maps.TravelMode.TRANSIT;
     }
 }
 
